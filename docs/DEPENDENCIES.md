@@ -45,15 +45,26 @@ npm ci --prefix tools/douyin-im --ignore-scripts
 
 ## Qwen3-TTS（可选）
 
-服务源码在 `services/voice/qwen3`，上游为 [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS)。本机环境使用Python 3.12、CUDA PyTorch；完整历史环境锁为 `requirements.lock.txt`，其中GPU轮子要按官方PyTorch源与驱动版本安装，不能保证在其他显卡上原样使用。
+服务源码在 `services/voice/qwen3`，上游为 [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS)。本机环境使用Python 3.12、CUDA PyTorch。`requirements.txt` 列出主要依赖；`requirements.lock.txt` 是整理时安装环境的完整版本快照，已移除本机wheel路径，供复现对照。GPU依赖应按官方PyTorch源安装配套版本，不能保证该完整快照适合其他显卡。
 
 ```powershell
 py -3.12 -m venv services\voice\qwen3\venv
 # 先按PyTorch官方说明安装匹配GPU/驱动的torch、torchaudio
-services\voice\qwen3\venv\Scripts\python.exe -m pip install -r services\voice\qwen3\requirements.lock.txt
+services\voice\qwen3\venv\Scripts\python.exe -m pip install -r services\voice\qwen3\requirements.txt
 ```
 
-下载 `Qwen3-TTS-12Hz-1.7B-Base` 和 `Qwen3-TTS-12Hz-1.7B-VoiceDesign` 到该目录的 `models` 子目录。准备自己获授权的参考音频，按 `examples/voices.example.json` 配置 `voices.json`、`preferences.json`。服务需 `references`、`audio`、`jobs` 目录；不要把参考音频、访问令牌或生成语音提交Git。
+模型下载清单 `download-manifest.json` 固定了 `Qwen3-TTS-12Hz-1.7B-Base` 与 `Qwen3-TTS-12Hz-1.7B-VoiceDesign` 的revision、文件长度及可核验的权重SHA-256。可以执行下面的下载与检查步骤；网络必须能访问Hugging Face，失败时先看日志，不跳过哈希校验：
+
+```powershell
+$voicePython = 'services/voice/qwen3/venv/Scripts/python.exe'
+& $voicePython services/voice/qwen3/download.py
+& $voicePython services/voice/qwen3/validate-models.py
+& $voicePython services/voice/qwen3/worker.py --design
+Copy-Item examples/preferences.example.json services/voice/qwen3/preferences.json
+& $voicePython services/voice/qwen3/server.py
+```
+
+`worker.py --design` 会在本机生成三种原创参考音色和 `voices.json`，不会发送语音；已有音色时保留原件。也可准备自己获授权的参考音频，按 `examples/voices.example.json` 填写实际音频路径和准确朗读文本。`validate-models.py` 通过后才生成 `models-ready.json`。不要手工创建空的ready标记，不要把参考音频、访问令牌或生成语音提交Git。
 
 初始化默认语音根目录是项目下 `services/voice`；复用已有外置环境时加 `--voice-root "D:/YourVoiceRoot"`。服务端口18034，本地访问令牌由服务生成。必须实际生成并试听、查询任务完成后，才能验收语音模块。
 
