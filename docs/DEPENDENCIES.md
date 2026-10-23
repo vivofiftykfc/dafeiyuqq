@@ -26,6 +26,8 @@ npm ci --prefix tools/douyin-im --ignore-scripts
 
 确认存在 `tools/douyin-im/lib/index.js`。协议登录/会话和允许联系人在本机建立，不随仓库提供。先连接，再在控制台逐人启用；新增联系人不默认回复。协议状态随平台变化，不能把某次连通视作永久兼容。
 
+需要从源码重新构建SDK时，执行 `npm run build --prefix tools/douyin-im`。构建工具、协议文件、`src/base/runtime` 和浏览器资产许可均随包提供；不要将这些代码目录误当作个人运行缓存排除。CI会在Windows上独立验证该构建。
+
 ## ComfyUI生图（可选）
 
 1. 从 [ComfyUI官方](https://github.com/Comfy-Org/ComfyUI) 安装Windows环境，确认NVIDIA驱动和所配PyTorch能使用CUDA。
