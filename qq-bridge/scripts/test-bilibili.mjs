@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
+import {Bilibili} from '../src/bilibili.js';import {videoUrl} from '../src/bilibili-browser.js';
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'bilibili-test-'));
+const url='https://www.bilibili.com/video/BV1xx411c7mD/';
+for(const bad of ['http://www.bilibili.com/video/BV1xx411c7mD/','https://www.bilibili.com.evil/video/BV1xx411c7mD/','https://user:pass@www.bilibili.com/video/BV1xx411c7mD/','https://127.0.0.1/','https://www.bilibili.com/video/BV1xx411c7mD/?p=0'])assert.throws(()=>videoUrl(bad));
+assert.equal(videoUrl(url+'?spm_id_from=abc').url,url);
+let uid='123',calls=0,confirmed=false,now=Date.parse('2026-10-23T12:00:00+08:00'),memories=[];
+const browser={context:{},account:async()=>({uid,name:'test'}),watch:async()=>({...videoUrl(url),title:'测试视频',watchedSeconds:12,start:0,end:12,duration:60,samples:[],frames:[],limitations:'只看12秒'}),publish:async(u,t,a,before)=>{before();calls++;return {confirmed};},close:async()=>{}};
+const model={reply:async()=>JSON.stringify({impression:'片段里看见了测试画面',comment:'这一段演示很清楚。'})};
+const b=new Bilibili({root,browser,model,now:()=>now,remember:x=>memories.push(x)});
+await assert.rejects(b.watch(url),/核验/);await b.verify();const observed=await b.watch(url);assert(observed.draft);assert.equal(memories.length,1);assert.equal(calls,0);
+uid='456';await assert.rejects(b.handle('POST',{action:'publish',id:observed.draft.id}),/账号/);assert.equal(calls,0);uid='123';
+await b.handle('POST',{action:'publish',id:observed.draft.id});assert.equal(calls,1);assert.equal(b.status().drafts[0].state,'uncertain');await assert.rejects(b.publishDraft(observed.draft.id),/已尝试/);assert.equal(calls,1);
+b.configure({enabled:false});await assert.rejects(b.watch(url),/暂停/);assert.throws(()=>b.configure({maxComments:3}));assert.throws(()=>b.configure({mode:'anything'}));
+b.db.close();const reopened=new Bilibili({root,browser,model,remember:()=>{}});assert.equal(reopened.status().drafts[0].state,'uncertain');assert.equal(reopened.settings().enabled,false);reopened.db.close();
+console.log('PASS Bilibili: strict URLs, login/account isolation, evidence memory, draft default, no uncertain retry, pause, limits, durable state; no external comments sent');

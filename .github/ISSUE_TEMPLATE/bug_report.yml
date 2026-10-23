@@ -1,0 +1,21 @@
+name: Bug report / 问题反馈
+description: 报告可复现的问题，请先脱敏
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境
+      description: Windows、Node、DSH、SnowLuma版本和启用模块
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤与预期行为
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 脱敏日志与实际结果
+      description: 不要提交令牌、Cookie、账号、联系人、聊天正文或数据库

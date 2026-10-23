@@ -1,0 +1,5 @@
+{
+  "adb": "D:/Projects/dafeiyuqq/tools/platform-tools/adb.exe",
+  "serial": "YOUR_ANDROID_SERIAL",
+  "ffmpeg": "D:/APPs/FFmpeg/bin/ffmpeg.exe"
+}

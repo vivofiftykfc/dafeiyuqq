@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
+import {ChatMemory} from '../src/chat-memory.js';import {Management} from '../src/management.js';
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bridge-management-'));fs.writeFileSync(path.join(dir,'memory.json'),JSON.stringify({facts:[{fact:'original',evidence:'owner',at:'test'}]}));
+const db=new ChatMemory(path.join(dir,'db.sqlite'));for(let i=0;i<30;i++)db.append('wechat','bot','owner',{id:String(i),role:'in',text:'record '+i});db.append('wechat','bot','group',{id:'1',role:'in',text:'group only'});
+const m=new Management(db,async()=> 'compressed',{ownerDir:dir});
+const invoke=(route,body,method='POST')=>m.handle(method,new URL('http://localhost/api/manage/'+route),body);
+assert.equal((await invoke('memory?platform=wechat',{},'GET')).chats.length,2);
+const who={platform:'wechat',account:'bot',peer:'owner'};await invoke('memory/summary',{...who,summary:'changed',previous:''});
+await assert.rejects(invoke('memory/summary',{...who,summary:'overwrite',previous:''}),/已变化/);
+assert.equal(db.context('wechat','bot','group').summary,'');
+assert.equal(db.db.prepare('SELECT COUNT(*) n FROM summary_edits').get().n,1);
+await invoke('memory/compact',who);for(let i=0;i<50&&m.jobs[0].state==='running';i++)await new Promise(r=>setTimeout(r,10));assert.equal(m.jobs[0].state,'completed');assert.equal(db.context('wechat','bot','owner').recent.length,24);assert.equal(db.context('wechat','bot','group').recent.length,1);
+const archive=db.detail('wechat','bot','owner').archives[0];assert.equal(db.archive('wechat','bot','owner',archive.id).length,6);assert.throws(()=>db.archive('wechat','bot','group',archive.id),/没有该归档/);
+const owner=m.owner();m.editFact({revision:owner.revision,index:0,action:'edit',fact:'updated',evidence:'verified'});assert.throws(()=>m.editFact({revision:owner.revision,index:0,action:'remove'}),/已更新/);assert.equal(fs.readdirSync(path.join(dir,'memory-backups')).length,1);
+assert.throws(()=>m.control('arbitrary shell command'),/未知/);
+db.close();console.log('PASS management isolation, summary conflicts/history, selected compression, owner backups/conflicts, fixed actions');

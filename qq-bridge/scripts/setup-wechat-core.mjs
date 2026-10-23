@@ -1,0 +1,8 @@
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import yaml from 'js-yaml';
+const root=path.resolve(import.meta.dirname,'..'),file=path.join(os.homedir(),'.dsh/profiles/dafeiyuqq/cordis.patch.yml');
+let rows=yaml.load(fs.readFileSync(file,'utf8'));const owner=rows.flatMap(r=>r.insert||[]).find(r=>r.id==='preset-dafeiyu-owner');if(!owner)throw Error('Owner preset missing; refuse fallback');
+const copy=structuredClone(owner);copy.id='preset-dafeiyu-wechat-owner';copy.config.id='dafeiyu-wechat-owner';copy.config.name='大肥鱼 · 微信主人（Bridge 核心）';copy.config.plugins.push({id:'wechat-channel-guard',name:'qq-agent-presets/wechat-core-owner-guard.mjs'});
+const ids=new Set(['preset-dafeiyu-wechat-owner','preset-dafeiyu-wechat-group','mcp-wechat-core']);
+rows=rows.filter(r=>!ids.has(r.id)).map(r=>r.insert?{...r,insert:r.insert.filter(x=>!ids.has(x.id))}:r).filter(r=>!r.insert||r.insert.length);
+rows.push({insert:[copy,{id:'preset-dafeiyu-wechat-group',name:'@deepseek-ai/dsh-agent-preset',config:{id:'dafeiyu-wechat-group',name:'大肥鱼 · 微信群（二代会话）',order:18,plugins:[{id:'wechat-group',name:'qq-agent-presets/wechat-core-group.mjs'},{id:'time-context',name:'@deepseek-ai/dsh-time-context'}]}},{id:'mcp-wechat-core',name:'@deepseek-ai/dsh-mcp-client',config:{serverName:'wechat_core',transport:'stdio',command:path.resolve(root,'../snowluma/node.exe'),args:[path.join(root,'src/mcp-wechat-core.js')],toolCallTimeoutMs:30000}}]});
+fs.copyFileSync(file,file+'.before-wechat-core-'+Date.now());fs.writeFileSync(file,yaml.dump(rows,{lineWidth:-1}));console.log('Installed WeChat owner/group presets and bound messaging MCP. DSH must reload before enable.');

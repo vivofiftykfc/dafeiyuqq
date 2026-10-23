@@ -1,0 +1,61 @@
+import type { Account } from '../account.js';
+import { ChatContact } from './chat-contact.js';
+import { Member } from './member.js';
+import { Friend } from './friend.js';
+import { GroupJoinRequest } from './group-join-request.js';
+import type { GroupMemberData, ImActionResponse, ParticipantActionResponse, SendMessageResponse } from '../../services/im/types.js';
+export interface GroupMetadata {
+    name?: string;
+    description?: string;
+    notice?: string;
+    avatar?: string;
+    ownerUid?: string;
+    memberCount?: number;
+    muted?: boolean;
+    pinned?: boolean;
+    favorite?: boolean;
+    isParticipant?: boolean;
+    inboxType?: number;
+    members?: GroupMemberData[];
+}
+export declare class Group extends ChatContact {
+    readonly groupId: string;
+    private _name?;
+    private _description?;
+    private _notice?;
+    private _avatar?;
+    private _ownerUid?;
+    private _memberCount?;
+    private _muted?;
+    private _pinned?;
+    private _favorite?;
+    private _isParticipant?;
+    private readonly members;
+    private readonly joinRequests;
+    protected get logTarget(): string;
+    private constructor();
+    static bind(groupId: string, shortId: string, account: Account, metadata?: GroupMetadata): Group;
+    get name(): string | undefined;
+    get description(): string | undefined;
+    get notice(): string | undefined;
+    get avatar(): string | undefined;
+    get ownerUid(): string | undefined;
+    get memberCount(): number | undefined;
+    get muted(): boolean | undefined;
+    get pinned(): boolean | undefined;
+    get favorite(): boolean | undefined;
+    get isParticipant(): boolean | undefined;
+    get memberList(): ReadonlyMap<string, Member>;
+    pickMember(uid: string): Member | undefined;
+    getMemberList(force?: boolean): Promise<ReadonlyMap<string, Member>>;
+    inviteMembers(uids: string[]): Promise<ParticipantActionResponse>;
+    sendInvite(friend: Friend): Promise<SendMessageResponse>;
+    get joinRequestList(): ReadonlyMap<string, GroupJoinRequest>;
+    pickJoinRequest(requestId: string): GroupJoinRequest | undefined;
+    getJoinRequests(): Promise<ReadonlyMap<string, GroupJoinRequest>>;
+    removeMembers(uids: string[]): Promise<ImActionResponse>;
+    leave(): Promise<ImActionResponse>;
+    private hydrateGroupMembers;
+    private replaceMemberInstances;
+}
+//# sourceMappingURL=group.d.ts.map

@@ -1,0 +1,3 @@
+# Installed in Desktop/111/dafeiyu/runtime/wechat-env, not system Python.
+Pillow==13.0.0
+tzdata==2026.5

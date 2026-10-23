@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {DirectReplyQueue} from '../src/douyin-direct-queue.js';
+import {normalizeMediaReply} from '../src/douyin-media.js';
+const sleep=()=>new Promise(r=>setTimeout(r,30));
+let calls=0,sends=0,discards=0,events=[];
+const q=new DirectReplyQueue({debounce:1,model:{reply:async()=>{calls++;if(calls===1)throw Error('model failure');return '恢复';},discard:async()=>discards++},send:async()=>{sends++;},record:(type)=>events.push(type)});
+q.start([['a','A'],['b','B']],'bot');
+const msg=(id,uid='a')=>q.receive({uid,id,accountUid:'bot',time:Date.now()+1,text:'测试'});
+msg('1');await sleep();assert.equal(calls,2);assert.equal(sends,1);assert(q.enabled);
+q.model.reply=async()=>{throw Error('permanent model failure');};msg('2');await sleep();assert(q.enabled);assert.equal(sends,1);assert(events.includes('generation-error'));
+q.model.reply=async()=> '正常';msg('3','b');await sleep();assert.equal(sends,2);
+q.send=async()=>{throw Object.assign(Error('prepare failed'),{beforeSend:true});};msg('4');await sleep();assert(q.enabled);assert(!events.includes('uncertain'));
+q.send=async()=>{sends++;throw Error('network outcome unknown');};msg('5');await sleep();assert(!q.enabled);assert.equal(sends,3);assert.equal(events.filter(t=>t==='uncertain').length,1);
+assert.deepEqual(JSON.parse(normalizeMediaReply('```json\n{"text":"正常正文","stickerId":"missing","voice":"yes"}\n```',[])),{text:'正常正文',voice:false,stickerId:null});
+assert.throws(()=>normalizeMediaReply('{"text":"未完成',[]),/JSON/);
+assert.equal(JSON.parse(normalizeMediaReply('.json{"text":"看到了蓝色","voice":false}',[])).text,'看到了蓝色');
+console.log('PASS retry once before send, peer failure isolation, preparation-vs-network failure, no uncertain retry, invalid optional media fallback');

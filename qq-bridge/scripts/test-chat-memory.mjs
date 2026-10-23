@@ -1,0 +1,14 @@
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import assert from 'node:assert/strict';import {gunzipSync} from 'node:zlib';
+import {ChatMemory} from '../src/chat-memory.js';import {videoContext} from '../src/douyin-video-context.js';
+const file=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'chat-memory-')),'test.sqlite');let db=new ChatMemory(file);
+for(let i=0;i<85;i++)db.append('douyin','bot1','friend1',{id:String(i),role:i%2?'in':'out',text:'证据消息'+i,sender:'friend1'});
+db.append('qq','bot1','friend1',{id:'1',role:'in',text:'QQ独立'});db.append('douyin','bot2','friend1',{id:'1',role:'in',text:'账号2独立'});db.append('wechat','bot1','friend1',{id:'1',role:'in',text:'微信独立'});
+await assert.rejects(db.compact(async()=>{throw Error('model down')}));assert.equal(db.db.prepare('SELECT COUNT(*) n FROM messages WHERE k=?').get(db.key('douyin','bot1','friend1')).n,85);
+assert.equal(await db.compact(async source=>{assert.equal(source.messages.length,61);return '具体事实和来源，待办保留';}),1);
+assert.equal(db.context('douyin','bot1','friend1').recent.length,24);assert.equal(db.context('qq','bot1','friend1').recent[0].text,'QQ独立');assert.equal(db.context('douyin','bot2','friend1').summary,'');
+const archive=db.db.prepare('SELECT raw_gzip FROM archives').get();assert.equal(JSON.parse(gunzipSync(archive.raw_gzip)).length,61);
+db.close();db=new ChatMemory(file);assert.match(db.block('douyin','bot1','friend1'),/具体事实/);db.append('douyin','bot1','friend1',{id:'84',role:'in',text:'重复'});assert.equal(db.context('douyin','bot1','friend1').recent.at(-1).text,'证据消息84');db.close();
+const event={work:{id:'123',title:'分享标题',getDetail:async()=>({detail:{desc:'作品题目'}})},account:{im:{client:{requestRaw:async()=>({rawText:JSON.stringify({status_code:0,comments:[{text:'一条观点'},{text:'另一条观点'}]})})}}}};
+const evidence=await videoContext(event);assert.equal(evidence.comments.length,2);assert.match(evidence.text,/尚未观看/);assert.match(evidence.text,/作品题目/);
+event.account.im.client.requestRaw=async()=>{throw Error('unavailable')};const fallback=await videoContext(event);assert.equal(fallback.comments.length,0);assert.match(fallback.text,/评论不可用/);
+console.log('PASS: platform/account/peer isolation, durable summary, dedup, raw archive recovery, failed compression rollback, video evidence and honest fallback');

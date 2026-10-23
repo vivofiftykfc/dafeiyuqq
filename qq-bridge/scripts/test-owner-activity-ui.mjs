@@ -1,0 +1,33 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {chromium} from '../../tools/console-tests/node_modules/playwright-core/index.mjs';
+import {startConsoleFixture} from './console-ui-fixture.mjs';
+import {ownerActivity,screenshotFile} from '../src/owner-activity.js';
+import os from 'node:os';
+const base=fs.mkdtempSync(path.join(os.tmpdir(),'activity-ui-'));
+fs.mkdirSync(path.join(base,'phone-shots'));
+fs.writeFileSync(path.join(base,'phone-shots','test.png'),Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1ioAAAAASUVORK5CYII=','base64'));
+fs.writeFileSync(path.join(base,'douyin-outgoing-2026-10-23.json'),JSON.stringify({messages:[{to:'Laisser',text:'路过冒个泡',sentAt:'2026-10-23 17:00 (Asia/Shanghai)',verified:true,verifyShot:'test.png'}]}));
+const fixture=await startConsoleFixture();
+const executablePath=['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(fs.existsSync);
+const browser=await chromium.launch({headless:true,executablePath});
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/api/owner-activity?*',async route=>{const d=ownerActivity(base,new URL(route.request().url()).searchParams.get('day'));await route.fulfill({json:d});});
+ await page.route('**/api/owner-screenshot?*',async route=>{assert.equal(route.request().headers()['x-console-token'],'test-token');const id=new URL(route.request().url()).searchParams.get('id');await route.fulfill({contentType:'image/png',body:fs.readFileSync(screenshotFile(base,id))});});
+ await page.addInitScript(()=>localStorage.setItem('consoleToken','test-token'));
+ await page.goto(fixture.url+'/#owner-activity');
+ await page.locator('#footDay').fill('2026-10-23');await page.locator('#footRefresh').click();
+ await page.waitForFunction(()=>document.querySelectorAll('.foot-entry').length>0);
+ await page.selectOption('#footKind','message');await page.fill('#footSearch','Laisser');
+ await page.waitForFunction(()=>document.querySelectorAll('.foot-entry').length===1 && document.querySelector('.foot-entry').textContent.includes('路过冒个泡'));
+ assert.equal(await page.locator('.foot-entry').count(),1);assert.match(await page.locator('.foot-entry').textContent(),/路过冒个泡/);
+ await page.locator('.foot-entry [data-foot-shot]').click();await page.waitForFunction(()=>document.querySelector('#footImage').naturalWidth>0);
+ await page.locator('#footExpand').click();assert.equal(await page.locator('#footDialog').evaluate(e=>e.open),true);await page.locator('#footClose').click();
+ const out=path.resolve(import.meta.dirname,'../../logs/owner-activity-ui.png');await page.screenshot({path:out,fullPage:true});
+ await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'Mobile layout overflow');
+ await page.fill('#footSearch','nonexistent-no-match');assert.match(await page.locator('#footEvents').textContent(),/没有记录/);
+ await page.fill('#footSearch','');await page.selectOption('#footKind','');await page.locator('#footDay').fill('2000-01-01');await page.locator('#footRefresh').click();await page.waitForFunction(()=>document.querySelector('#footState').textContent.includes('当天暂无'));
+ assert.deepEqual(errors,[]);console.log('PASS live data rendering, recipient filter, authenticated image, zoom, mobile, empty day; '+out);
+}finally{await browser.close();await fixture.close();}

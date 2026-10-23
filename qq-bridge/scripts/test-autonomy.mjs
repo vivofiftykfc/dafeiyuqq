@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
+import {AutonomyStore,awakeElapsed} from '../src/autonomy-store.js';
+import {RiskGate,ApprovalRequired} from '../src/autonomy-risk.js';
+import {createArtifact,previewArtifact} from '../src/autonomy-tools.js';
+import {ChatMemory} from '../src/chat-memory.js';import {Autonomy} from '../src/autonomy.js';
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'autonomy-test-'));let now=Date.parse('2026-10-24T09:00:00+08:00');
+const store=new AutonomyStore(path.join(dir,'a.sqlite'),{now:()=>now});store.configure({enabled:true});store.plan();const rows=store.status().activities.sort((a,b)=>a.due-b.due);assert(rows.length>=2&&rows.length<=5);for(let i=1;i<rows.length;i++)assert(rows[i].due-rows[i-1].due>=90*60000);store.plan();assert.equal(store.status().activities.length,rows.length);
+now=rows[0].due;assert.equal(store.claim().id,rows[0].id);assert.equal(store.claim(),null);store.recover();assert.equal(store.status().activities.find(a=>a.id===rows[0].id).state,'interrupted');
+assert.equal(awakeElapsed(Date.parse('2026-10-23T22:00:00+08:00'),Date.parse('2026-10-24T10:00:00+08:00')),2*3600000);
+let fetched=0,notified=0;const gate=new RiskGate(store,{notify:async()=>notified++,validate:async()=>{},fetcher:async(url,_n,opts)=>{await opts.beforeRequest(url);fetched++;return {url,body:'public'};}});
+await assert.rejects(gate.read('http://example.com/',{desire:'测试风险申请'}),ApprovalRequired);assert.equal(fetched,0);assert.equal(notified,1);const request=store.status().risks[0];await assert.rejects(gate.read(request.url),ApprovalRequired);assert.equal(notified,1);gate.decide(request.id,true);await gate.read(request.url);assert.equal(fetched,1);await assert.rejects(gate.read(request.url),ApprovalRequired);assert.equal(fetched,1);
+const redirectGate=new RiskGate(store,{notify:async()=>{},validate:async()=>{},fetcher:async(url,_n,opts)=>{await opts.beforeRequest('http://redirect.example/');throw Error('must not fetch');}});await assert.rejects(redirectGate.read('https://example.org/'),ApprovalRequired);
+assert.throws(()=>createArtifact(dir,'activity','../outside.txt','x'));const artifact=createArtifact(path.join(dir,'play'),'activity','hello.html','<h1>自己的小作品</h1><script>document.body.dataset.ran="yes"</script>');assert.throws(()=>createArtifact(path.join(dir,'play'),'activity','hello.html','overwrite'));assert((await previewArtifact(artifact.file)).isolated);
+const memory=new ChatMemory(path.join(dir,'memory.sqlite'));let sent=0;
+const runtime=new Autonomy({store,memory,model:{},send:async()=>{sent++;return {sent:true};}});const owner=store.destinations().find(d=>d.id==='owner-qq');
+now=Date.parse('2026-10-25T10:00:00+08:00');await runtime.share(owner,'测试主动问候？','test',{expectReply:true});assert.equal(sent,1);await assert.rejects(runtime.share(owner,'再次发送','test2'));assert.equal(sent,1);
+memory.append('qq',owner.account,'private:'+owner.peer,{id:'response',role:'in',sender:owner.peer,text:'我先忙'});runtime.observeMessages();assert.equal(store.status().waits[0].state,'replied');
+await assert.rejects(runtime.ownerCommand('允许访问 '+request.id,'someone-else','private').then(x=>{if(!x)throw Error('not owner');}),/not owner/);
+// A resumed URL grant must not let model proposals start unrelated actions.
+await assert.rejects(gate.read('http://fresh-approval.example/'),ApprovalRequired);
+const grantId=store.status().risks.find(r=>r.url==='http://fresh-approval.example/').id;runtime.risk.decide(grantId,true);
+let proposals=0;runtime.think=async source=>{if(proposals++)return {action:'finish',note:'done'};assert.equal(source.approved.length,1);assert.equal(source.approved[0].id,grantId);return {action:'phone',app:'douyin'};};
+let forbiddenPhoneCalls=0;runtime.phone=async()=>{forbiddenPhoneCalls++;throw Error('phone must never be called');};
+runtime.resumeRisk(grantId);const resumed=store.db.prepare('SELECT * FROM activities WHERE id=?').get('risk-'+grantId);await runtime.run(resumed);assert.equal(store.db.prepare('SELECT state FROM activities WHERE id=?').get(resumed.id).state,'completed');
+assert.equal(forbiddenPhoneCalls,0);
+store.configure({enabled:false});await assert.rejects(runtime.share(owner,'暂停后不能发送','test3'));assert.equal(sent,1);
+memory.close();store.close();console.log('PASS autonomy: random durable schedule, no catch-up/duplicate claim, quiet-time clock, risk approval/no-fetch/redirect, no file escape or overwrite, isolated preview, rate limit, reply cancels waiting, pause gate');

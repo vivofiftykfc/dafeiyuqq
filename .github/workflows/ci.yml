@@ -1,0 +1,22 @@
+name: Source and offline tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: qq-bridge/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: npm ci --prefix qq-bridge
+      - run: npm run check
+      - run: npm run audit:source
+      - run: python -c "import ast,pathlib; files=list(pathlib.Path('wechat/integration').rglob('*.py'))+list(pathlib.Path('services').rglob('*.py')); [ast.parse(p.read_text(encoding='utf-8-sig'),filename=str(p)) for p in files]; print(len(files),'Python files parsed')"
+      - run: npm test

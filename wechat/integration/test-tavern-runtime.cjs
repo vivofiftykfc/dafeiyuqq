@@ -1,0 +1,32 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const source=fs.readFileSync('integration/tavern-extension/index.js','utf8').replace(/^import[^\n]+\n/gm,'').split('// Native ST generation')[0]+'\nglobalThis.run=tick;';
+let reviewMediaReply,repeatedImageCallbacks,stampUserTurn;
+async function check({kind='chat',recover=false,duplicate=false,engine='tavern',evaluation=false,contextOnly=false,fragmentDuplicate=false,video=false,prefetched=false}={}){
+ const calls=[],chat=[],meta={};let prompts={};
+ if(recover){chat.push({is_user:true,mes:'old input'},{is_user:false,mes:'unsent ghost'});meta.dafeiyu_pending_generation={id:'old',before:1};}
+ if(duplicate)chat.push({is_user:false,mes:'observed',extra:{dafeiyu_source:'test'}});
+ if(fragmentDuplicate)chat.push({is_user:true,mes:'hello',extra:{dafeiyu_source:'test'}});
+ const toolManager={registerFunctionToolsOpenAI:async data=>{data.tools=['tool']}};
+ const current={onlineStatus:'connected',characters:[{avatar:'test.png',chat:'test'}],chat,chatMetadata:meta,selectCharacterById:async()=>{},generate:async type=>{const data={};await toolManager.registerFunctionToolsOpenAI(data);if(type==='quiet'){if((video&&calls.some(row=>row[0]==='public-video'))||(prefetched&&chat.some(row=>String(row.mes).startsWith('看完了')))){assert(!data.tools);return '这条鱼怎么还公开游戏库啊，太离谱了';}if(kind.startsWith('runtime:')){assert(data.tools);assert(prompts.dafeiyu_runtime_event.includes('活动指令：test'));}else assert(!data.tools);return kind.startsWith('runtime:')?'<SKIP>':'{"mode":"react","max_chars":80,"followup":false}';}assert(data.tools);if(kind.startsWith('runtime:'))assert(prompts.dafeiyu_runtime_event.includes('活动指令：test'));if(video)await vm.runInContext("api('/public-video',{job_id:'test',url:'https://b23.tv/abc'})",ctx);chat.push({is_user:false,mes:(video||prefetched)?'看完了。这鱼把游戏库公开了':'reply'});},saveChat:async()=>calls.push(['save',JSON.stringify(chat)]),getRequestHeaders:()=>({})};
+ const job={id:'test',avatar:'test.png',chatFile:'test',character:'test',text:kind==='observation'?'observed':'hello',turnContext:'temporary evidence',scope:'private',kind,engine,evaluation,contextOnly,requireReceipt:true,created:Date.now(),nativeVideo:prefetched?{watched_entire_video:false}:null};
+ const ctx={structuredClone,stampUserTurn,repeatedImageCallbacks,reviewMediaReply,deliveryPlan:x=>x,packageReply:text=>({text,bubbles:[text]}),conversationView:x=>({messages:x}),ToolManager:toolManager,SillyTavern:{getContext:()=>current},sendMessageAsUser:async text=>chat.push({is_user:true,mes:text}),setExtensionPrompt:(key,value)=>prompts[key]=value,extension_prompt_types:{IN_CHAT:1},console,setTimeout:fn=>fn(),fetch:async(url,options)=>{const body=JSON.parse(options.body);if(url.endsWith('/complete'))assert(!body.error,body.error);const path=url.split('/').pop();calls.push([path]);let result={};if(path==='next')result={job};if(path==='dsh-generate'){assert(!body.history.some(row=>row.text==='hello'),'current user message must not be duplicated in history');result={text:'reply'};}return {ok:true,json:async()=>result};}};
+ vm.createContext(ctx);vm.runInContext(source,ctx);await ctx.run();
+ if(prefetched)assert.equal(calls.filter(row=>row[0]==='public-video').length,0,'prefetched video must not reread tools during review');
+ if(video){assert.equal(calls.filter(row=>row[0]==='public-video').length,1,'revision cannot repeat the video tool');assert(calls.filter(row=>row[0]==='save').every(row=>!row[1].includes('看完了')),'unsupported draft cannot persist');}
+ assert(Object.values(prompts).every(x=>x===''));assert(!meta.dafeiyu_pending_generation);
+ if(kind==='chat'){assert.equal(chat.filter(x=>!x.is_user).length,evaluation&&!contextOnly?1:0);assert(!JSON.stringify(chat).includes('unsent ghost'));assert(calls.some(x=>x[0]==='complete'));}
+ else if(kind==='observation'){assert.equal(chat.filter(x=>x.extra?.dafeiyu_source==='test').length,1);}
+ else assert.equal(chat.length,0);
+ if(contextOnly){assert.equal(chat.filter(x=>x.is_user).length,1);assert.equal(chat[0].mes,'hello');assert.equal(chat[0].extra.dafeiyu_source,'test');assert(!calls.some(x=>['memory','dsh-generate','capabilities'].includes(x[0])));}
+
+}
+function checkPromptPlacement(){
+ const full=fs.readFileSync('integration/tavern-extension/index.js','utf8');
+ const hook=full.slice(full.indexOf('context.eventSource.on(context.eventTypes.CHAT_COMPLETION_PROMPT_READY'),full.indexOf('context.registerFunctionTool'));
+ let handler;const ctx={context:{eventSource:{on:(_event,fn)=>handler=fn},eventTypes:{CHAT_COMPLETION_PROMPT_READY:'prompt'}},planning:false,planningInstruction:'',activeVisual:null,activeJob:{kind:'runtime:read history'}};
+ vm.createContext(ctx);vm.runInContext(hook,ctx);
+ const chat=[{role:'user',content:'old question'},{role:'assistant',content:'already answered'}];handler({chat,dryRun:false});assert.equal(chat.at(-1).role,'system');assert(chat.at(-1).content.includes('read history'));
+ ctx.activeJob={kind:'chat'};ctx.planning=true;ctx.planningInstruction='ONLY JSON';handler({chat,dryRun:false});assert.equal(chat.at(-1).content,'ONLY JSON');
+ ctx.planning=false;ctx.activeVisual='data:image/jpeg;base64,test';handler({chat,dryRun:false});assert.equal(chat.findLast(x=>x.role==='user').content.at(-1).image_url.url,ctx.activeVisual);ctx.activeVisual=null;const length=chat.length;handler({chat,dryRun:false});assert.equal(chat.length,length,'normal reply must not inherit planner instruction');handler({chat,dryRun:true});assert.equal(chat.length,length);
+}
+(async()=>{({reviewMediaReply,repeatedImageCallbacks}=await import('./tavern-extension/reply-delivery.mjs'));({stampUserTurn}=await import('./tavern-extension/history-view.mjs'));checkPromptPlacement();await check();await check({recover:true});await check({kind:'observation'});await check({kind:'observation',duplicate:true});await check({kind:'runtime:test'});await check({engine:'dsh'});await check({engine:'dsh',evaluation:true});await check({engine:'dsh',kind:'runtime:test'});await check({contextOnly:true});await check({contextOnly:true,fragmentDuplicate:true});await check({engine:'dsh',evaluation:true,contextOnly:true});await check({video:true});await check({kind:'runtime:test',video:true});await check({prefetched:true});await check({kind:'runtime:test',prefetched:true});console.log('15 durable history, DSH runtime without fabricated user turns, crash recovery, dedupe and tool isolation checks passed')})().catch(e=>{console.error(e);process.exit(1)});

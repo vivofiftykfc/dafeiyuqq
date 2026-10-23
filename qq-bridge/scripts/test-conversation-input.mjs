@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';
+import {cleanConversationText,publicPersonaProjection,usefulVideoTitle} from '../src/conversation-input.js';
+const raw=JSON.stringify({sticker_type:2,url:{uri:'private-resource',url_list:['https://example.invalid/?signed=secret']}})+'【好友发来图片/表情；本轮已附原图】';
+assert.equal(cleanConversationText(raw,{imageAttached:true}),'【图片/表情，原图已附】');
+assert.match(cleanConversationText(raw),/历史图片/);assert.doesNotMatch(cleanConversationText(raw),/signed|原图已附/);
+const userJson='{"question":"为什么","value":123}';assert.equal(cleanConversationText(userJson),userJson);
+assert.equal(usefulVideoTitle('当前版本过低，请升级后查看'), '');assert.equal(usefulVideoTitle('白矮星为什么会爆炸'),'白矮星为什么会爆炸');
+const source='小鲸鱼，蓝白配色，友好自然的虚构助手。';const publicCard=publicPersonaProjection(source);
+assert.doesNotMatch(publicCard,/10000001|11000099|example_user|可以叫对方「哥」|非常强烈的依赖/);assert.match(publicCard,/小鲸鱼/);
+console.log('PASS media metadata / attachment truth / legitimate JSON / placeholder titles / public relationship projection');

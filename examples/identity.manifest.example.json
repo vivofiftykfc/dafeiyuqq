@@ -1,0 +1,4 @@
+{
+  "visual_prompt": "An original blue and white cartoon whale character.",
+  "references": [{"file": "base-six-views.png", "sha256": "REPLACE_WITH_SHA256_OF_YOUR_OWN_REFERENCE_PNG"}]
+}

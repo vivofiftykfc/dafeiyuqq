@@ -1,0 +1,16 @@
+{
+  "name": "dafeiyuqq",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A local-first companion workspace for QQ, Douyin and optional native WeChat integration.",
+  "license": "MIT",
+  "engines": {"node": ">=24.22.1"},
+  "scripts": {
+    "configure": "node scripts/configure.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "check": "node scripts/check-source.mjs",
+    "audit:source": "node scripts/audit-source.mjs",
+    "test": "node scripts/test-offline.mjs"
+  }
+}

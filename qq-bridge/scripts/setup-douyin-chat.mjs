@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import yaml from 'js-yaml';
+const file=path.join(os.homedir(),'.dsh/profiles/dafeiyuqq/cordis.patch.yml');
+const rows=yaml.load(fs.readFileSync(file,'utf8'));
+const id='preset-dafeiyu-douyin-chat';
+const next=rows.filter(r=>r.id!==id).map(r=>r.insert?{...r,insert:r.insert.filter(x=>x.id!==id)}:r).filter(r=>!r.insert||r.insert.length);
+for(const group of next)for(const row of group.insert||[])if(row.id==='mcp-dafeiyu-phone')row.config.args=row.config.args.map(a=>a.startsWith('--audit-')?'--audit-v5-phone-lease':a);
+next.push({insert:[{id,name:'@deepseek-ai/dsh-agent-preset',config:{id:'dafeiyu-douyin-chat',name:'大肥鱼 · 抖音好友（无工具）',order:16,plugins:[{id:'douyin-chat',name:'qq-agent-presets/douyin-chat.mjs'},{id:'time-context',name:'@deepseek-ai/dsh-time-context'}]}}]});
+fs.copyFileSync(file,file+'.before-douyin-'+Date.now());
+fs.writeFileSync(file,yaml.dump(next,{lineWidth:-1}));
+console.log('Installed isolated Douyin chat preset; no owner-memory, workspace instructions or tools.');

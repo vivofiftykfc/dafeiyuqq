@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {speakerIdentity} from './tavern-plugin/speaker-identity.mjs';
+import {stampUserTurn,conversationView} from './tavern-extension/history-view.mjs';
+const a=speakerIdentity('group','wxid_a','阿白'),renamed=speakerIdentity('group','wxid_a','小白'),b=speakerIdentity('group','wxid_b','阿白');
+assert.equal(a.code,renamed.code);assert.notEqual(a.code,b.code);
+assert.equal(a.stable_id,renamed.stable_id);assert.notEqual(a.stable_id,b.stable_id);
+assert.equal(speakerIdentity('group',null,'wxid_a'),null,'display names never manufacture native identity');
+assert.throws(()=>speakerIdentity('private','wxid_a','主人'));
+assert.throws(()=>speakerIdentity('group','../file','阿白'));
+const messages=[{is_user:true,name:'阿白',mes:'我在学数学'},{is_user:true,name:'小白',mes:'我刚才学什么'}];
+stampUserTurn(messages[0],{id:'eval:a',text:messages[0].mes,senderIdentity:a});
+stampUserTurn(messages[1],{id:'eval:b',text:messages[1].mes,senderIdentity:renamed});
+const view=conversationView(messages,{scope:'group'});
+assert(view.messages.every(row=>row.mes.includes('"stable_id":"wxid_a"')));
+assert.equal(messages[0].mes,'我在学数学');assert.equal(a.source,'bridge_native_sender');
+assert.equal(speakerIdentity('group','wxid_a','阿白',true).source,'evaluation_fixture');
+console.log('PASS: stable group speaker identity survives rename, distinguishes duplicate names and grants no privileges');

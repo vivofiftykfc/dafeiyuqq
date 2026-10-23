@@ -1,0 +1,11 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>微信二代会话 · QQ Bridge</title>
+<style>body{font:16px/1.8 system-ui;max-width:900px;margin:40px auto;padding:20px;background:#f6f8fb;color:#263447}section{background:white;padding:24px;border-radius:14px;margin:20px 0}button,input{font:inherit;padding:8px;margin:6px}pre{white-space:pre-wrap;overflow-wrap:anywhere}#error{color:#a32}</style>
+<a href="/">← QQ Bridge</a><h1>微信二代会话</h1><p>原生微信收发 → QQ Bridge 未读与发送队列 → DSH 连续会话。主人私聊和群聊独立，沿用现有人格来源和记忆库。</p>
+<section><label>控制台令牌 <input id="token" type="password"></label><button id="refresh">刷新</button><p id="error"></p><p id="status"></p><label><input type="checkbox" id="privateEnabled">主人私聊</label><label><input type="checkbox" id="groupEnabled">已绑定群聊</label><p><button id="enable">启用二代核心</button><button id="disable">停止新核心收发</button></p><p>首次切换需重启 DSH、QQ Bridge，再启用核心并重启原生微信桥接。停止立即撤销令牌和待发队列；回退旧通路还需重启微信桥接。已交给客户端的发送不能撤回。配置已启用不等于原生桥接已加载。</p></section>
+<section><h2>会话与投递记录</h2><pre id="detail"></pre></section><script>
+const $=id=>document.getElementById(id);$('token').value=localStorage.getItem('consoleToken')||'';
+async function api(route,body){const r=await fetch('/api/wechat-core/'+route,{method:body?'POST':'GET',headers:{'x-console-token':$('token').value,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const v=await r.json();if(!r.ok||!v.ok)throw Error(v.error||'接口未加载');return v;}
+async function refresh(){const s=await api('status');$('status').textContent=s.enabled?(s.nativeAttached?'核心已启用，原生微信桥接心跳正常':'核心已启用，尚未收到原生桥接心跳；不能确认已经接管'):'核心关闭；旧通路是否运行由原生桥接决定';for(const k of ['privateEnabled','groupEnabled'])$(k).checked=s[k];$('detail').textContent=JSON.stringify({chats:s.chats,outbox:s.outbox},null,2);}
+const run=f=>async()=>{try{$('error').textContent='';await f();}catch(e){$('error').textContent=e.message;}};
+$('refresh').onclick=run(refresh);for(const [id,enabled]of [['enable',true],['disable',false]])$(id).onclick=run(async()=>{await api('config',{enabled,privateEnabled:$('privateEnabled').checked,groupEnabled:$('groupEnabled').checked});await refresh();});if($('token').value)run(refresh)();
+</script></html>

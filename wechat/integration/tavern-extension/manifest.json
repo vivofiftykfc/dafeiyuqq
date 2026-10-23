@@ -1,0 +1,1 @@
+{"display_name": "大肥鱼微信适配（测试）", "loading_order": 100, "requires": [], "optional": [], "js": "index.js", "author": "Dafeiyu local integration", "version": "0.2.0", "auto_update": false, "generate_interceptor": "dafeiyu_conversation_view"}

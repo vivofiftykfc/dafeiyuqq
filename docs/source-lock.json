@@ -1,0 +1,35 @@
+{
+  "exported": "2026-10-23",
+  "upstreams": {
+    "qqBridge": {
+      "url": "https://github.com/Derpyu520/qq-bridge",
+      "base": "a49877f4e58d04e47532d44b803360d0f001160d",
+      "modified": true
+    },
+    "companion": {
+      "url": "https://github.com/pinganbbOvO/ai-companion-kit",
+      "license": "MIT",
+      "modified": true
+    },
+    "douyinIM": {
+      "url": "https://github.com/zhinjs/douyin-im",
+      "base": "f6eee669c39094224e00c6b877e1964d9da4e393",
+      "modified": true
+    },
+    "wechatNative": {
+      "url": "https://github.com/pendj/helper",
+      "base": "a127ec91989de2eb12e5cc104ff991e94895ee03",
+      "bundled": false
+    }
+  },
+  "files": 1351,
+  "excluded": [
+    "personal config",
+    "tokens and credentials",
+    "chat memory and diaries",
+    "models and generated media",
+    "installed environments",
+    "third-party desktop applications",
+    "native WeChat vendor source/binaries without confirmed distribution terms"
+  ]
+}

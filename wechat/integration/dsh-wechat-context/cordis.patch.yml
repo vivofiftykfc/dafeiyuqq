@@ -1,0 +1,4 @@
+- insert:
+    - id: dafeiyu-context
+      name: dafeiyu-wechat-tools
+      disabled: true
