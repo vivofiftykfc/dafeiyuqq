@@ -2,7 +2,7 @@
 import json, logging, sqlite3, time
 from pathlib import Path
 
-DB = Path('__PROJECT_ROOT__/qq-bridge/state/chat-memory.sqlite')
+DB = Path(__file__).resolve().parents[2]/'qq-bridge/state/chat-memory.sqlite'
 
 def connect(file=DB):
     file=Path(file); file.parent.mkdir(parents=True,exist_ok=True)

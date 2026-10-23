@@ -11,7 +11,7 @@
 [![Windows](https://img.shields.io/badge/platform-Windows%2010%2F11-1684c2.svg)](docs/DEPENDENCIES.md)
 [![Node](https://img.shields.io/badge/Node.js-24%2B-43853d.svg)](https://nodejs.org/)
 
-[快速开始](docs/QUICKSTART.md) · [依赖清单](docs/DEPENDENCIES.md) · [架构](docs/ARCHITECTURE.md) · [排障](docs/TROUBLESHOOTING.md) · [English](README.en.md)
+[快速开始](docs/QUICKSTART.md) · [依赖清单](docs/DEPENDENCIES.md) · [脚本](docs/SCRIPTS.md) · [架构](docs/ARCHITECTURE.md) · [排障](docs/TROUBLESHOOTING.md) · [English](README.en.md)
 
 </div>
 

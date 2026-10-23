@@ -9,7 +9,7 @@ import {diaryWrite} from './owner-diary.js';
 import {record as observationRecord} from './owner-observations.js';
 export const AUTONOMY_DB=path.resolve(import.meta.dirname,'../state/autonomy.sqlite');
 const PLAY=path.resolve(import.meta.dirname,'../../playground');
-const WECHAT='__PROJECT_ROOT__/wechat';
+const WECHAT=path.resolve(import.meta.dirname,'../../wechat');
 const actionSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('browse'),url:z.string().url(),desire:z.string().max(500),risk:z.string().max(500).default('')}),
  z.object({action:z.literal('phone'),app:z.enum(['douyin','zhihu'])}),

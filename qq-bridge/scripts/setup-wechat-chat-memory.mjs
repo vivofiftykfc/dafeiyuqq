@@ -1,5 +1,6 @@
 import fs from 'node:fs';
-const target='__PROJECT_ROOT__/wechat/runtime/dsh-home/profiles/dafeiyu-wechat/node_modules/dsh-wechat/dist/bridge/bridge.js';
+import path from 'node:path';
+const target=path.resolve(import.meta.dirname,'../../wechat/runtime/dsh-home/profiles/dafeiyu-wechat/node_modules/dsh-wechat/dist/bridge/bridge.js');
 let text=fs.readFileSync(target,'utf8');
 if(text.includes('wechat-chat-memory.js')){console.log('WeChat memory adapter already installed');process.exit(0);}
 const replace=(from,to)=>{if(!text.includes(from))throw Error('WeChat plugin layout changed; no files modified');text=text.replace(from,to);};

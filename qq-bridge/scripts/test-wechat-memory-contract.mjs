@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {ChatMemory} from '../src/chat-memory.js';
-const root=process.env.DAFEIYU_WECHAT_ROOT||'__PROJECT_ROOT__/wechat';
+const root=process.env.DAFEIYU_WECHAT_ROOT||path.resolve(import.meta.dirname,'../../wechat');
 const python=path.join(root,'runtime/wechat-env/Scripts/python.exe');
 // The installed WeChat Python runtime can write only its project-owned directories.
 const base=path.join(root,'integration');

@@ -1,7 +1,7 @@
 """Hot-read the operator's extra private-chat whitelist, without owner privileges."""
 import json,re,time
 from pathlib import Path
-CONFIG=Path(r'__PROJECT_ROOT__\qq-bridge\state\wechat-core\config.json')
+CONFIG=Path(__file__).resolve().parents[1]/'state/wechat-core/config.json'
 ACCOUNT='wxid_bot'
 OWNER='wxid_owner'
 

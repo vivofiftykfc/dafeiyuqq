@@ -3,7 +3,7 @@ import asyncio,json
 from pathlib import Path
 from contextlib import asynccontextmanager,AsyncExitStack
 import httpx
-ROOT=Path('__PROJECT_ROOT__/qq-bridge')
+ROOT=Path(__file__).resolve().parents[2]/'qq-bridge'
 def enabled():
     file=ROOT/'state/wechat-core/config.json'
     return file.exists() and json.loads(file.read_text(encoding='utf-8')).get('enabled') is True

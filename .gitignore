@@ -54,3 +54,7 @@ qq-bridge/config/owner-identities.json
 !downloads/
 downloads/*
 !downloads/standard-preset-original.yml
+!tools/douyin-im/src/base/runtime/
+!tools/douyin-im/src/base/runtime/**
+!tools/douyin-im/lib/base/runtime/
+!tools/douyin-im/lib/base/runtime/**

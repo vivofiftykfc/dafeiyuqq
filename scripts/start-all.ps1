@@ -1,16 +1,16 @@
 ﻿param([switch]$CheckOnly,[switch]$StatusOnly,[switch]$SkipImages,[switch]$SkipDouyinReplies)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'launcher-admin.ps1')
+$root=Split-Path $PSScriptRoot -Parent
 if(-not $CheckOnly -and -not $StatusOnly){
  $principal=New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
  if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
   # The owner action broker refuses elevation. Start ordinary backends BEFORE UAC.
-  try{& '__PROJECT_ROOT__/wechat\integration\start-local.ps1' -NoBrowser}
+  try{& (Join-Path $root 'wechat\integration\start-local.ps1') -NoBrowser}
   catch{Write-Host '[WARN] Ordinary WeChat backends need attention; continuing independent channels.' -ForegroundColor Yellow}
  }
 }
 if(-not $CheckOnly -and -not $StatusOnly){$flags=@();if($SkipImages){$flags+='-SkipImages'};if($SkipDouyinReplies){$flags+='-SkipDouyinReplies'};Invoke-ElevatedLauncher $PSCommandPath $flags}
-$root=Split-Path $PSScriptRoot -Parent
 $logs=Join-Path $root 'logs'
 $node=Join-Path $root 'snowluma\node.exe'
 $dsh='__DSH_ROOT__\DeepSeek Harness.exe'

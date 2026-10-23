@@ -1,7 +1,7 @@
 import fs from 'node:fs';import path from 'node:path';import net from 'node:net';
 import {spawn} from 'node:child_process';import {createHash,randomUUID} from 'node:crypto';
 const ROOT=path.resolve(import.meta.dirname,'../..');
-const WECHAT='__PROJECT_ROOT__/wechat';
+const WECHAT=path.join(ROOT,'wechat');
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const read=file=>JSON.parse(fs.readFileSync(file,'utf8').replace(/^\uFEFF/,''));
 const port=p=>new Promise(resolve=>{const s=net.connect(p,'127.0.0.1');let done=false;const end=v=>{if(!done){done=true;s.destroy();resolve(v);}};s.setTimeout(700,()=>end(false));s.on('connect',()=>end(true));s.on('error',()=>end(false));});

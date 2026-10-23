@@ -1,7 +1,7 @@
 """Read-only contextual projection; never merge identities by nickname."""
 import json,re
 from pathlib import Path
-ROOT=Path('__PROJECT_ROOT__/qq-bridge')
+ROOT=Path(__file__).resolve().parents[2]/'qq-bridge'
 
 def read_lines(file):
  try:lines=file.read_text(encoding='utf-8').splitlines()

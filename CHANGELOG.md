@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — 2026-10-23
+
+- Derive internal WeChat, media and shared-memory paths from each script's location.
+- Check package entrypoints and npm script references as part of CI.
+- Restore SDK build tools, test configuration and bundled browser-library notices; remove unavailable demo, probe and legacy voice commands.
+- Document runtime, development and deployment-maintenance entrypoints separately.
+
 ## 0.1.0 — 2026-10-23
 
 - First public source snapshot integrating QQ bridge, Douyin SDK, conversation memory and local companion tools.

@@ -4,6 +4,7 @@ import {conversationPolicy} from './conversation-policy.js';
 import {relationshipContext} from './conversation-input.js';
 import {mediaScope} from './wechat-scope.js';
 import {coreMedia} from './wechat-core-media.js';
+const WECHAT_ROOT=path.resolve(import.meta.dirname,'../../wechat');
 
 export const WECHAT_ACCOUNT='wxid_bot';
 export const WECHAT_OWNER='wxid_owner';
@@ -35,7 +36,7 @@ export class WechatCore {
     return {ok:true,contact};
   }
   requestContactRefresh(){
-    fs.writeFileSync('__PROJECT_ROOT__/wechat/runtime/refresh-contact-directory.request','console contact metadata refresh');
+    fs.writeFileSync(path.join(WECHAT_ROOT,'runtime/refresh-contact-directory.request'),'console contact metadata refresh');
     return {ok:true,note:'已请求刷新联系人，稍后点击查找；只读取联系人标识，不读取聊天正文。'};
   }
   editContact({action,peer,label,enabled}){
@@ -108,7 +109,7 @@ export class WechatCore {
   visuals(peer){
     const st=this.chat(peer),items=st.inbox.filter(m=>m.seq>st.read&&m.visualId);if(items.length>8)throw Error('Too many unread images; not silently dropping evidence');
     return items.map(m=>{
-      const folder=path.join('__PROJECT_ROOT__/wechat/runtime/media',mediaScope(peer),'incoming');
+      const folder=path.join(WECHAT_ROOT,'runtime/media',mediaScope(peer),'incoming');
       const base=crypto.createHash('sha256').update(m.visualId).digest('hex')+'.vision';
       const meta=JSON.parse(fs.readFileSync(path.join(folder,base+'.json'),'utf8'));
       if(meta.chat_id!==peer||meta.event_id!==m.visualId||meta.sender_id!==m.sender)throw Error('Visual source mismatch');

@@ -1,6 +1,6 @@
 {
   "name": "dafeiyuqq",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "A local-first companion workspace for QQ, Douyin and optional native WeChat integration.",
@@ -9,7 +9,7 @@
   "scripts": {
     "configure": "node scripts/configure.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "check": "node scripts/check-source.mjs",
+    "check": "node scripts/check-source.mjs && node scripts/check-entrypoints.mjs && node scripts/check-imports.mjs",
     "audit:source": "node scripts/audit-source.mjs",
     "test": "node scripts/test-offline.mjs"
   }

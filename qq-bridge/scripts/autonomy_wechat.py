@@ -1,7 +1,7 @@
 """Drain only the coordinator's durable, allowlisted WeChat text outbox."""
 import json,sqlite3,time
 from pathlib import Path
-DB=Path(r'__PROJECT_ROOT__\qq-bridge\state\autonomy.sqlite')
+DB=Path(__file__).resolve().parents[1]/'state/autonomy.sqlite'
 def managed():
     return DB.exists()
 

@@ -1,6 +1,6 @@
 import io,json,sqlite3,sys,tempfile
 from pathlib import Path
-sys.path.insert(0,r'__PROJECT_ROOT__/wechat/integration')
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'wechat/integration'))
 import contact_scope,visual_preview,wechat_voice_inbox as voice
 from PIL import Image
 peer='wxid_example';other='wxid_example'
