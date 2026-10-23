@@ -41,3 +41,4 @@ jobs:
       - run: npm run audit:source
       - run: python -c "import ast,pathlib; files=list(pathlib.Path('wechat/integration').rglob('*.py'))+list(pathlib.Path('services').rglob('*.py')); [ast.parse(p.read_text(encoding='utf-8-sig'),filename=str(p)) for p in files]; print(len(files),'Python files parsed')"
       - run: npm test
+      - run: node scripts/test-douyin-startup.mjs

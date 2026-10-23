@@ -3,6 +3,8 @@
 ## 日常运行
 
 - 根目录分项CMD用于首次安装和排障；完整一键启动器用于已准备全部模块的部署。
+- 「一键开启抖音回复.cmd」恢复协议连接并开启已保存勾选好友的回复，不扩大名单；「一键关闭抖音回复.cmd」只关闭回复，保留连接与其他服务。两者要求桥接后台已启动，不需要管理员权限。
+- 完整一键启动器会调用抖音开启流程；单独重启Bridge时回复默认关闭，可用上述开启按钮恢复。登录验证、断线重连或发送结果不确定时仍需按控制台提示处理，再手动开启；按钮不补发历史消息。
 - `scripts/start-all.ps1 -CheckOnly` 只检查依赖路径、端口和账号状态。
 - `scripts/wechat-stack.ps1`、`wechat-native-runner.ps1` 从脚本所在项目推导微信目录，不依赖维护者的桌面路径。
 - 桥接管理、媒体、统一记忆和微信适配器之间的项目内路径从源码位置推导。外置DSH/ComfyUI/语音环境由初始化配置指定。
@@ -12,6 +14,7 @@
 ```powershell
 npm run check       # JavaScript/JSON，以及package入口与npm命令引用的文件
 npm test            # 隔离离线回归
+node scripts/test-douyin-startup.mjs # 抖音开启/关闭、名单与连接等待的离线测试
 npm run audit:source
 .\scripts\check-secrets.ps1 # 完整历史扫描；需要gh可访问工具的公开Release
 ```

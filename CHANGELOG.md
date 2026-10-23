@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add one-click Douyin reply enable/disable buttons using the saved friend allowlist, without restarting other services.
+- Verify reply shutdown and document startup, login and reconnect behavior.
+
 ## 0.1.1 — 2026-10-23
 
 - Derive internal WeChat, media and shared-memory paths from each script's location.
