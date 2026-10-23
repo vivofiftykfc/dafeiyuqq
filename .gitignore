@@ -16,7 +16,10 @@
 **/*.sqlite*
 **/*.db
 **/*.jsonl
-**/*cookie*
+**/*cookie*.json
+**/*cookie*.txt
+**/*cookie*.sqlite*
+**/*cookie*.db
 **/references/
 **/voices.json
 **/preferences.json

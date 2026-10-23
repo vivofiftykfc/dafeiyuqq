@@ -16,7 +16,7 @@ npm run audit:source
 .\scripts\check-secrets.ps1 # 完整历史扫描；需要gh可访问工具的公开Release
 ```
 
-`check-entrypoints.mjs` 检查 `main/types/bin/exports` 与npm脚本中的本地文件、配置、目录和内部脚本名。`check-imports.mjs` 另查生产模块的相对导入，避免打包时漏掉子目录。它们不执行发送消息或修改账号的命令，也不能代替真实模块安装和设备验收。
+`check-entrypoints.mjs` 检查 `main/types/bin/exports` 与npm脚本中的本地文件、配置、目录和内部脚本名。`check-imports.mjs` 另查生产模块的相对导入，并确认文件确实进入Git源码快照，避免工作区里有文件、打包时却被忽略。它们不执行发送消息或修改账号的命令，也不能代替真实模块安装和设备验收。
 
 源码包没有携带维护者的探测、真实账号回放和旧SAPI语音工具，对应不可用npm别名已移除。当前语音能力使用文档中的Qwen3-TTS流程。
 
