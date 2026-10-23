@@ -3,6 +3,16 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
+  secrets:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/check-secrets.ps1
   offline:
     runs-on: windows-latest
     steps:

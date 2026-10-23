@@ -1,0 +1,17 @@
+# Exact reviewed fingerprints only. Public SDK application identifiers, PEM parser patterns and model token-file checksum.
+# No user credentials are allowlisted. New commits and changed locations must be reviewed.
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/anti-bot/desktop-web-secure-crypto.js:private-key:113
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/passport/signQs.d.ts:generic-api-key:1
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/passport/signQs.js:generic-api-key:2
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/services/im/credentials.d.ts:generic-api-key:5
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/services/im/desktop.d.ts:generic-api-key:8
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/services/im/desktop.js:generic-api-key:9
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/src/anti-bot/desktop-web-secure-crypto.ts:private-key:124
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/desktop/assets/dtrait.js:private-key:2955
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/src/passport/signQs.ts:generic-api-key:4
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/src/desktop/desktop-login.test.ts:generic-api-key:587
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/src/desktop/desktop-login.test.ts:generic-api-key:618
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/src/services/im/desktop.ts:generic-api-key:16
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/desktop/assets/web-secure.js:private-key:6162
+3b128864207211ba81266da889efb6798b2cd715:tools/douyin-im/lib/desktop/assets/web-secure.js:private-key:6703
+3b128864207211ba81266da889efb6798b2cd715:wechat/integration/sensevoice_asr.py:generic-api-key:6
